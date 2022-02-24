@@ -1,0 +1,112 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl", "rhel-openssl-1.1.x"]
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model banner {
+  id       Int  @id @default(autoincrement()) @db.UnsignedInt
+  imageUrl Int
+  title    Int?
+}
+
+model lesson {
+  id           Int         @id @default(autoincrement()) @db.UnsignedInt
+  title        String      @default("") @db.VarChar(255)
+  description  String      @default("") @db.VarChar(255)
+  imageUrl     String      @default("") @db.VarChar(255)
+  dateCreated  DateTime    @default(now()) @db.Timestamp(0)
+  type         lesson_type @default(VIDEO_SERIES)
+  introVideoId Int?        @db.UnsignedInt
+  active       Boolean     @default(true)
+  overview     String?     @db.Text
+  topics       topic[]     @relation("lesson_to_topic")
+  videos       video[]     @relation("lesson_to_video")
+  resources    resource[]  @relation("lesson_to_resource")
+  introVideo   video?       @relation(fields:[introVideoId], references:[id])
+}
+
+model podcast {
+  id           Int      @id @default(autoincrement()) @db.UnsignedInt
+  title        String   @default("") @db.VarChar(255)
+  description  String   @default("") @db.VarChar(255)
+  podcastUrl   String?  @db.VarChar(255)
+  podcastImage String?  @db.VarChar(255)
+  length       Int?
+  metadata     Json?
+  dateCreated DateTime @default(now()) @db.Timestamp(0)
+}
+
+model resource {
+  id          Int           @id @default(autoincrement()) @db.UnsignedInt
+  title       String        @default("") @db.VarChar(255)
+  description String        @default("") @db.VarChar(255)
+  imageUrl    String        @default("") @db.VarChar(255)
+  url         String?       @db.VarChar(255)
+  dateCreated DateTime      @default(now()) @db.Timestamp(0)
+  type        resource_type @default(PDF)
+  lessons     lesson[]      @relation("lesson_to_resource")
+}
+
+model video {
+  id          Int         @id @default(autoincrement()) @db.UnsignedInt
+  title       String      @default("") @db.VarChar(255)
+  description String      @default("") @db.VarChar(255)
+  videoUrl    String?     @db.VarChar(255)
+  dateCreated DateTime    @default(now()) @db.Timestamp(0)
+  length      String?     @db.VarChar(255)
+  type        video_type?
+  previewUrl  String?     @db.VarChar(255)
+  weight      Int         @default(0)
+  active      Boolean     @default(true)
+  lessons     lesson[]    @relation("lesson_to_video")
+  topics      topic[]     @relation("topic_to_video")
+  webinars    webinar[]   @relation("video_to_webinar")
+  introLesson lesson[]
+}
+
+model topic {
+  id     Int      @id @default(autoincrement()) @db.UnsignedInt
+  name   String   @default("") @db.VarChar(255)
+  lesson lesson[] @relation("lesson_to_topic")
+  video  video[]  @relation("topic_to_video")
+}
+
+model webinar {
+  id           Int      @id @default(autoincrement()) @db.UnsignedInt
+  title        String   @default("") @db.VarChar(255)
+  description  String   @default("") @db.VarChar(1027)
+  meetingUrl   String?  @db.VarChar(255)
+  videoUrl     String?  @db.VarChar(255)
+  pdfUrl       String?  @db.VarChar(255)
+  bannerImage  String?  @db.VarChar(255)
+  cardImage    String?  @db.VarChar(255)
+  trainerName  String?  @db.VarChar(255)
+  trainerImage String?  @db.VarChar(255)
+  date         DateTime
+  trainerBio   String?  @db.VarChar(1027)
+  type         Int?
+  dateCreated  DateTime @default(now()) @db.Timestamp(0)
+  active       Boolean
+  video        video[]  @relation("video_to_webinar")
+}
+
+enum lesson_type {
+  VIDEO_SERIES
+  WEBINAR
+}
+
+enum resource_type {
+  PDF
+  VIDEO
+  PODCAST
+}
+
+enum video_type {
+  BOP
+  WEBINAR
+}
